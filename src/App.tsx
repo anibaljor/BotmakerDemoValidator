@@ -169,20 +169,27 @@ const handleApiResponseError = async (res: Response, defaultMessage: string): Pr
   try {
     const errPayload = await res.json().catch(() => ({}));
     const detailsText = String(errPayload.details || errPayload.error || "");
+    const lowerDetails = detailsText.toLowerCase();
     if (
-      detailsText.toLowerCase().includes('api_key') || 
-      detailsText.toLowerCase().includes('apikey') || 
-      detailsText.toLowerCase().includes('key not') || 
-      detailsText.toLowerCase().includes('invalid key') ||
-      detailsText.toLowerCase().includes('api key') ||
-      detailsText.toLowerCase().includes('authorized')
+      lowerDetails.includes('api_key') || 
+      lowerDetails.includes('apikey') || 
+      lowerDetails.includes('key not') || 
+      lowerDetails.includes('invalid key') ||
+      lowerDetails.includes('api key') ||
+      lowerDetails.includes('authorized') ||
+      lowerDetails.includes('expired') ||
+      lowerDetails.includes('invalid_argument')
     ) {
-      errMsg = `Error de API Key de Gemini: La clave de API de Gemini provista es inválida o no cuenta con permisos de ejecución. Verificá que la variable de entorno GEMINI_API_KEY esté correctamente configurada en tus variables de Vercel (o en Settings de AI Studio) sin espacios ni caracteres extraños.`;
+      if (lowerDetails.includes('expired')) {
+        errMsg = `Error de API Key expirada: La clave de API de Gemini provista ha expirado. Si estás probando localmente o en AI Studio, por favor ve al menú de "Settings" (parte superior derecha si utilizas AI Studio) > "Secrets" o "Environment Variables", y actualiza la clave GEMINI_API_KEY por una nueva y válida de Google AI Studio. Si estás en producción, actualízala en tus variables de Vercel.`;
+      } else {
+        errMsg = `Error de API Key de Gemini: La clave de API de Gemini provista es inválida o no cuenta con permisos de ejecución. Verificá que la variable de entorno GEMINI_API_KEY esté correctamente configurada en tus variables de Vercel (o en Settings de AI Studio) sin espacios ni caracteres extraños.`;
+      }
     } else if (
-      detailsText.toLowerCase().includes('quota') || 
-      detailsText.toLowerCase().includes('rate limit') || 
-      detailsText.toLowerCase().includes('limit exceeded') || 
-      detailsText.toLowerCase().includes('429')
+      lowerDetails.includes('quota') || 
+      lowerDetails.includes('rate limit') || 
+      lowerDetails.includes('limit exceeded') || 
+      lowerDetails.includes('429')
     ) {
       errMsg = `Límite de Cuotas / Rate Limit Excedido: Has superado la cuota de pedidos correspondiente a tu API Key de Gemini free-tier. Por favor, aguarda un minuto (60 segundos) para que se reestablezca la tasa y vuelve a intentar.`;
     } else if (detailsText) {
