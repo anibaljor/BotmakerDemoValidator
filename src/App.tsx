@@ -976,6 +976,15 @@ export default function App() {
                   </span>
                 </div>
               </div>
+
+              {/* Aviso de Procesamiento Efímero / Privacidad */}
+              <div className="flex items-start gap-2 bg-amber-50/70 border border-amber-200/60 p-2.5 rounded-lg text-[10.5px] leading-relaxed text-amber-800/90">
+                <span className="text-base leading-none select-none mt-0.5">🔒</span>
+                <div>
+                  <strong className="font-semibold text-amber-900 block mb-0.5">Privacidad Garantizada:</strong>
+                  Esta demostración procesa todas las imágenes y datos recopilados de manera <strong>100% efímera en memoria</strong>. Ninguna foto de webcam, archivo de imagen, dato personal extraído o resultado de coincidencia biométrica se almacena, guarda ni persiste en base de datos o almacenamiento físico. Al actualizar el navegador o vaciar la conversación, toda la información se elimina definitivamente.
+                </div>
+              </div>
               
               {botmakerState.currentStep === 'waiting_selfie' && (
                 <div className="space-y-2">
