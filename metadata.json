@@ -1,0 +1,6 @@
+{
+  "name": "Identidad WhatsApp Simulator",
+  "description": "Simulador interactivo de validación de identidad integrado con WhatsApp y Botmaker usando la API de Gemini Vision.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
