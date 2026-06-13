@@ -207,6 +207,7 @@ export default function App() {
   const [showCamera, setShowCamera] = useState<boolean>(false);
   const [cameraMode, setCameraMode] = useState<'selfie_with_dni' | 'dni_front'>('selfie_with_dni');
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [activeMobileTab, setActiveMobileTab] = useState<'contacts' | 'chat' | 'console'>('chat');
   
   // Real-time API Key Connection state
   const [apiHealth, setApiHealth] = useState<{
@@ -625,6 +626,7 @@ export default function App() {
   const handleSelectScenario = (scenarioId: string) => {
     setActiveScenarioId(scenarioId);
     setActiveConsoleTab('logs');
+    setActiveMobileTab('chat');
   };
 
   // Reset current scenario conversation and variables
@@ -703,13 +705,13 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
+    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
       
       {/* 3 COLUMN GRID WRAPPER */}
-      <div className="grid grid-cols-1 md:grid-cols-12 w-full h-full">
+      <div className="grid grid-cols-1 md:grid-cols-12 w-full flex-1 overflow-hidden">
         
         {/* COLUMN 1: LEFT PANEL - Presets & Scenario Picker (WhatsApp Chat Contacts simulation) */}
-        <div className="md:col-span-3 border-r border-slate-850 bg-[#111b21] flex flex-col h-full overflow-hidden">
+        <div className={`${activeMobileTab === 'contacts' ? 'flex' : 'hidden md:flex'} md:col-span-3 border-r border-slate-850 bg-[#111b21] flex-col h-full overflow-hidden`}>
           {/* Logo Brand Header */}
           <div className="px-4 py-4.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -823,7 +825,7 @@ export default function App() {
         </div>
 
         {/* COLUMN 2: CENTER PANEL - WhatsApp UI Web Client */}
-        <div className="md:col-span-5 flex flex-col h-full bg-[#efeae2] relative border-r border-[#e9edef]">
+        <div className={`${activeMobileTab === 'chat' ? 'flex' : 'hidden md:flex'} md:col-span-5 flex-col h-full bg-[#efeae2] relative border-r border-[#e9edef]`}>
           
           {/* Header Info */}
           <div className="px-4 py-3 bg-[#f0f2f5] border-b border-[#e9edef] flex items-center justify-between shadow-sm flex-shrink-0">
@@ -1145,7 +1147,7 @@ export default function App() {
         </div>
 
         {/* COLUMN 3: RIGHT PANEL - Logging and Node.js Code panel */}
-        <div className="md:col-span-4 h-full overflow-hidden">
+        <div className={`${activeMobileTab === 'console' ? 'block' : 'hidden md:block'} md:col-span-4 h-full overflow-hidden`}>
           <BotmakerConsole 
             botmakerState={botmakerState}
             activeTab={activeConsoleTab}
@@ -1159,6 +1161,40 @@ export default function App() {
           />
         </div>
 
+      </div>
+
+      {/* MOBILE TAB NAVIGATION BAR */}
+      <div className="md:hidden flex h-16 bg-[#111b21] border-t border-slate-805 text-xs text-slate-400 select-none flex-shrink-0 z-10 shadow-lg">
+        <button 
+          onClick={() => setActiveMobileTab('contacts')}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${
+            activeMobileTab === 'contacts' ? 'text-emerald-400 bg-slate-950 font-bold border-t-2 border-emerald-500' : 'hover:bg-slate-900/40 text-slate-400'
+          }`}
+        >
+          <span className="text-base">👥</span>
+          <span className="text-[10px]">Casos Demo</span>
+        </button>
+        <button 
+          onClick={() => setActiveMobileTab('chat')}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all relative ${
+            activeMobileTab === 'chat' ? 'text-emerald-400 bg-slate-950 font-bold border-t-2 border-emerald-500' : 'hover:bg-slate-900/40 text-slate-400'
+          }`}
+        >
+          <span className="text-base">💬</span>
+          <span className="text-[10px]">WhatsApp</span>
+          {botmakerState.currentStep !== 'completed' && botmakerState.currentStep !== 'failed' && botmakerState.currentStep !== 'waiting_selfie' && (
+            <div className="absolute top-3 right-1/4 h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+          )}
+        </button>
+        <button 
+          onClick={() => setActiveMobileTab('console')}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${
+            activeMobileTab === 'console' ? 'text-emerald-400 bg-slate-950 font-bold border-t-2 border-emerald-500' : 'hover:bg-slate-900/40 text-slate-400'
+          }`}
+        >
+          <span className="text-base">⚙️</span>
+          <span className="text-[10px]">Consola IA</span>
+        </button>
       </div>
 
       {/* CAMERA WIDGET OVERLAY */}
