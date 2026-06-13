@@ -117,6 +117,50 @@ const WHATSAPP_LIGHT_DOODLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width
   </g>
 </svg>`;
 
+const compressImage = (base64Str: string, maxDim: number = 1200): Promise<string> => {
+  return new Promise((resolve) => {
+    if (!base64Str || typeof base64Str !== 'string') {
+      resolve(base64Str);
+      return;
+    }
+    if (base64Str.startsWith('data:image/svg+xml')) {
+      resolve(base64Str);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      } else {
+        resolve(base64Str);
+      }
+    };
+    img.onerror = () => {
+      resolve(base64Str);
+    };
+    img.src = base64Str;
+  });
+};
+
 export default function App() {
   const [activeScenarioId, setActiveScenarioId] = useState<string>('case_success');
   const [activeConsoleTab, setActiveConsoleTab] = useState<'logs' | 'code' | 'variables'>('logs');
@@ -235,8 +279,15 @@ export default function App() {
   // MAIN PIPELINE PROCESSORS: Sends base64 image data to Real Gemini backend endpoints
   
   // Stage 1: Validate selfie image
-  const processSelfieImage = async (base64Image: string) => {
+  const processSelfieImage = async (rawBase64Image: string) => {
     setIsTyping(true);
+    let base64Image = rawBase64Image;
+    try {
+      base64Image = await compressImage(rawBase64Image);
+    } catch (compressErr) {
+      console.warn("Error compressing selfie, using original", compressErr);
+    }
+
     updateCurrentState({ 
       selfie_image: base64Image,
       currentStep: 'greeting' // state tracking loader
@@ -331,8 +382,15 @@ export default function App() {
   };
 
   // Stage 2: OCR front extraction and Biometric Face Comparison matching
-  const processDniFrontImage = async (base64Image: string) => {
+  const processDniFrontImage = async (rawBase64Image: string) => {
     setIsTyping(true);
+    let base64Image = rawBase64Image;
+    try {
+      base64Image = await compressImage(rawBase64Image);
+    } catch (compressErr) {
+      console.warn("Error compressing DNI, using original", compressErr);
+    }
+
     updateCurrentState({ 
       dni_image: base64Image,
       currentStep: 'comparing' // tracking loader

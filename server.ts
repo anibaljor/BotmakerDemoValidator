@@ -344,6 +344,10 @@ async function startViteIntegration() {
   });
 }
 
-startViteIntegration().catch((err) => {
-  console.error("Failed to start Vite integration:", err);
-});
+if (!process.env.VERCEL) {
+  startViteIntegration().catch((err) => {
+    console.error("Failed to start Vite integration:", err);
+  });
+}
+
+export default app;
