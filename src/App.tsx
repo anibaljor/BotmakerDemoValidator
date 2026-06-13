@@ -705,13 +705,13 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
+    <div className="flex flex-col h-[100dvh] w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
       
       {/* 3 COLUMN GRID WRAPPER */}
       <div className="grid grid-cols-1 md:grid-cols-12 w-full flex-1 overflow-hidden">
         
         {/* COLUMN 1: LEFT PANEL - Presets & Scenario Picker (WhatsApp Chat Contacts simulation) */}
-        <div className={`${activeMobileTab === 'contacts' ? 'flex' : 'hidden md:flex'} md:col-span-3 border-r border-slate-850 bg-[#111b21] flex-col h-full overflow-hidden`}>
+        <div className={`${activeMobileTab === 'contacts' ? 'flex' : 'hidden md:flex'} md:col-span-3 border-r border-slate-850 bg-[#111b21] flex-col h-full max-h-full min-h-0 overflow-hidden`}>
           {/* Logo Brand Header */}
           <div className="px-4 py-4.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -825,7 +825,7 @@ export default function App() {
         </div>
 
         {/* COLUMN 2: CENTER PANEL - WhatsApp UI Web Client */}
-        <div className={`${activeMobileTab === 'chat' ? 'flex' : 'hidden md:flex'} md:col-span-5 flex-col h-full bg-[#efeae2] relative border-r border-[#e9edef]`}>
+        <div className={`${activeMobileTab === 'chat' ? 'flex' : 'hidden md:flex'} md:col-span-5 flex-col h-full max-h-full min-h-0 bg-[#efeae2] relative border-r border-[#e9edef]`}>
           
           {/* Header Info */}
           <div className="px-4 py-3 bg-[#f0f2f5] border-b border-[#e9edef] flex items-center justify-between shadow-sm flex-shrink-0">
@@ -855,7 +855,7 @@ export default function App() {
 
           {/* WhatsApp Chat Wall Wallpaper */}
           <div 
-            className="flex-1 overflow-y-auto px-4 py-4 space-y-4 max-h-[calc(100vh-130px)] scrollbar-thin flex flex-col relative"
+            className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin flex flex-col relative"
             style={{ 
               backgroundImage: `url("data:image/svg+xml;base64,${btoa(WHATSAPP_LIGHT_DOODLE_SVG)}")`,
               backgroundColor: '#efeae2',
@@ -1147,7 +1147,7 @@ export default function App() {
         </div>
 
         {/* COLUMN 3: RIGHT PANEL - Logging and Node.js Code panel */}
-        <div className={`${activeMobileTab === 'console' ? 'block' : 'hidden md:block'} md:col-span-4 h-full overflow-hidden`}>
+        <div className={`${activeMobileTab === 'console' ? 'block' : 'hidden md:block'} md:col-span-4 h-full max-h-full min-h-0 overflow-hidden`}>
           <BotmakerConsole 
             botmakerState={botmakerState}
             activeTab={activeConsoleTab}
