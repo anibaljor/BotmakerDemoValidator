@@ -52,7 +52,24 @@ function parseBase64Image(dataUrl: string) {
 
 // 1. Endpoint: Health check
 app.get("/api/health", (req, res) => {
-  res.json({ status: "healthy", time: new Date().toISOString() });
+  const apiKey = process.env.GEMINI_API_KEY || "";
+  const hasKey = apiKey.trim().length > 0;
+  let maskedKey = "No configurada";
+  
+  if (hasKey) {
+    if (apiKey.length > 8) {
+      maskedKey = `${apiKey.substring(0, 6)}...${apiKey.substring(apiKey.length - 4)}`;
+    } else {
+      maskedKey = "Configurada";
+    }
+  }
+
+  res.json({ 
+    status: "healthy", 
+    time: new Date().toISOString(),
+    hasApiKey: hasKey,
+    maskedKey: maskedKey
+  });
 });
 
 // 2. Endpoint: Validate Selfie with DNI on Right Side

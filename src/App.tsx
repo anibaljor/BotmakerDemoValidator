@@ -16,7 +16,10 @@ import {
   Phone, 
   Video as VideoIcon,
   ChevronRight,
-  Info
+  Info,
+  Key,
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -161,12 +164,78 @@ const compressImage = (base64Str: string, maxDim: number = 1200): Promise<string
   });
 };
 
+const handleApiResponseError = async (res: Response, defaultMessage: string): Promise<never> => {
+  let errMsg = defaultMessage;
+  try {
+    const errPayload = await res.json().catch(() => ({}));
+    const detailsText = String(errPayload.details || errPayload.error || "");
+    if (
+      detailsText.toLowerCase().includes('api_key') || 
+      detailsText.toLowerCase().includes('apikey') || 
+      detailsText.toLowerCase().includes('key not') || 
+      detailsText.toLowerCase().includes('invalid key') ||
+      detailsText.toLowerCase().includes('api key') ||
+      detailsText.toLowerCase().includes('authorized')
+    ) {
+      errMsg = `Error de API Key de Gemini: La clave de API de Gemini provista es inválida o no cuenta con permisos de ejecución. Verificá que la variable de entorno GEMINI_API_KEY esté correctamente configurada en tus variables de Vercel (o en Settings de AI Studio) sin espacios ni caracteres extraños.`;
+    } else if (
+      detailsText.toLowerCase().includes('quota') || 
+      detailsText.toLowerCase().includes('rate limit') || 
+      detailsText.toLowerCase().includes('limit exceeded') || 
+      detailsText.toLowerCase().includes('429')
+    ) {
+      errMsg = `Límite de Cuotas / Rate Limit Excedido: Has superado la cuota de pedidos correspondiente a tu API Key de Gemini free-tier. Por favor, aguarda un minuto (60 segundos) para que se reestablezca la tasa y vuelve a intentar.`;
+    } else if (detailsText) {
+      errMsg = `Error del servicio de IA: ${detailsText}`;
+    }
+  } catch (parseErr) {
+    // Ignore and proceed with default message
+  }
+  throw new Error(errMsg);
+};
+
 export default function App() {
   const [activeScenarioId, setActiveScenarioId] = useState<string>('case_success');
   const [activeConsoleTab, setActiveConsoleTab] = useState<'logs' | 'code' | 'variables'>('logs');
   const [showCamera, setShowCamera] = useState<boolean>(false);
   const [cameraMode, setCameraMode] = useState<'selfie_with_dni' | 'dni_front'>('selfie_with_dni');
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  
+  // Real-time API Key Connection state
+  const [apiHealth, setApiHealth] = useState<{
+    status: 'checking' | 'ok' | 'error';
+    hasApiKey: boolean;
+    maskedKey: string;
+    checked: boolean;
+  }>({
+    status: 'checking',
+    hasApiKey: false,
+    maskedKey: 'Verificando...',
+    checked: false
+  });
+
+  // Query server api health on mount
+  useEffect(() => {
+    fetch('/api/health')
+      .then(r => r.json())
+      .then(data => {
+        setApiHealth({
+          status: data.hasApiKey ? 'ok' : 'error',
+          hasApiKey: !!data.hasApiKey,
+          maskedKey: data.maskedKey || 'No configurada',
+          checked: true
+        });
+      })
+      .catch(err => {
+        console.error("Error verifying Gemini API health:", err);
+        setApiHealth({
+          status: 'error',
+          hasApiKey: false,
+          maskedKey: 'Error de conexión',
+          checked: true
+        });
+      });
+  }, []);
   
   // Local states that synchronize when changing scenario contacts
   const [activeHistory, setActiveHistory] = useState<ScenarioHistory>({});
@@ -318,7 +387,7 @@ export default function App() {
       });
 
       if (!res.ok) {
-        throw new Error('Fallo en el servicio de validación de selfie.');
+        await handleApiResponseError(res, 'Fallo en el servicio de validación de selfie.');
       }
 
       const evaluation: SelfieValidation = await res.json();
@@ -421,7 +490,7 @@ export default function App() {
       });
 
       if (!ocrRes.ok) {
-        throw new Error('Fallo en el servicio OCR de extracción del documento.');
+        await handleApiResponseError(ocrRes, 'Fallo en el servicio OCR de extracción del documento.');
       }
 
       const ocrData: DniFrontExtraction = await ocrRes.json();
@@ -497,7 +566,7 @@ export default function App() {
         });
 
         if (!compRes.ok) {
-          throw new Error('No se pudo completar la comparación de reconocimiento facial.');
+          await handleApiResponseError(compRes, 'No se pudo completar la comparación de reconocimiento facial.');
         }
 
         const comparison: FaceComparison = await compRes.json();
@@ -888,10 +957,25 @@ export default function App() {
             )}
 
             <div className="bg-[#f0f2f5]/90 rounded-xl p-4 border border-slate-200/80 text-left space-y-2.5 mt-4 font-sans shadow-sm">
-              <h4 className="text-[11px] font-extrabold text-[#008069] flex items-center gap-1.5 uppercase tracking-wide">
-                <Info className="h-4 w-4" />
-                Guía de Copiloto para Demo de Equipo:
-              </h4>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                <h4 className="text-[11px] font-extrabold text-[#008069] flex items-center gap-1.5 uppercase tracking-wide">
+                  <Info className="h-4 w-4" />
+                  Guía de Copiloto para Demo de Equipo:
+                </h4>
+                
+                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${
+                  apiHealth.status === 'checking' 
+                    ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                    : apiHealth.status === 'ok' 
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                    : 'bg-rose-50 text-rose-700 border-rose-200'
+                }`}>
+                  <Key className="h-3 w-3" />
+                  <span className="font-mono">
+                    AI Key: {apiHealth.status === 'checking' ? 'Espere...' : apiHealth.status === 'ok' ? `${apiHealth.maskedKey} ✓` : 'Sin configurar ✗'}
+                  </span>
+                </div>
+              </div>
               
               {botmakerState.currentStep === 'waiting_selfie' && (
                 <div className="space-y-2">
